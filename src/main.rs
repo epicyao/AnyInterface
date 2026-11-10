@@ -33,7 +33,29 @@ async fn shutdown_signal() {
         }
     }
 
-    #[cfg(not(unix))]
+    #[cfg(windows)]
+    {
+        use tokio::signal::windows::{ctrl_break, ctrl_close, ctrl_logoff, ctrl_shutdown};
+
+        let mut ctrl_break = ctrl_break().expect("failed to install CTRL+BREAK handler");
+        let mut ctrl_close = ctrl_close().expect("failed to install CTRL+CLOSE handler");
+        let mut ctrl_logoff = ctrl_logoff().expect("failed to install CTRL+LOGOFF handler");
+        let mut ctrl_shutdown = ctrl_shutdown().expect("failed to install CTRL+SHUTDOWN handler");
+
+        tokio::select! {
+            result = tokio::signal::ctrl_c() => {
+                if let Err(error) = result {
+                    eprintln!("failed to listen for Ctrl+C: {error}");
+                }
+            }
+            _ = ctrl_break.recv() => {}
+            _ = ctrl_close.recv() => {}
+            _ = ctrl_logoff.recv() => {}
+            _ = ctrl_shutdown.recv() => {}
+        }
+    }
+
+    #[cfg(not(any(unix, windows)))]
     if let Err(error) = tokio::signal::ctrl_c().await {
         eprintln!("failed to listen for Ctrl+C: {error}");
     }

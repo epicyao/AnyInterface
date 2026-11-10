@@ -47,7 +47,7 @@ fn app() -> Router {
 
 #[tokio::main]
 async fn main() -> ExitCode {
-    let address = "127.0.0.1:3000";
+    let address = "localhost:3000";
     let listener = tokio::net::TcpListener::bind(address)
         .await
         .map_err(|error| {
